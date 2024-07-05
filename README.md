@@ -1,17 +1,36 @@
 # DocTemplify
 
-DocTemplify is a Python library that simplifies the process of generating documents using Google Docs templates. It allows you to create templates for various types of documents (such as offers, invoices, emails, etc.) in Google Docs, then use this library to fill in placeholders with actual data and create new documents based on those templates.
+DocTemplify is a Python library that streamlines document generation using Google Docs templates. It enables seamless creation of customized documents such as offers, invoices, and emails by leveraging existing Google Docs templates and filling them with dynamic data.
 
-## Features
+Key features:
+- Template-based document generation
+- Google Docs integration
+- Placeholder replacement with custom data
+- Easy-to-use API for document creation and management
 
-- Connect to Google Docs using a service account
-- Copy template documents
-- Replace placeholders in templates with actual data
-- Set public permissions on generated documents
-- Support for various document types (offers, invoices, emails, etc.)
+## Setup
 
-## Installation
+### 1. Create a Google Cloud Project
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/).
+2. Create a new project or select an existing one.
+3. Enable the Google Drive API and Google Docs API for your project.
 
+### 2. Create a Service Account
+1. In your Google Cloud project, go to "IAM & Admin" > "Service Accounts".
+2. Click "Create Service Account".
+3. Enter a name for your service account (e.g., "doctemplify-service").
+4. Grant this service account the "Editor" role for the project.
+5. Create a JSON key for this service account and download it.
+
+### 3. Share Your Template Document
+1. Create your template document in Google Docs.
+2. Click the "Share" button in the top right corner.
+3. In the "Add people or groups" field, paste the email address of your service account. It should look similar to: 
+   `your-service-account-name@your-project-id.iam.gserviceaccount.com`
+4. Set the permission to "Editor".
+5. Click "Send" to share the document with the service account.
+
+### 4. Install DocTemplify
 ```
 pip install doctemplify
 ```

@@ -1,5 +1,6 @@
 *.pyc
 __pycache__/
+.pytest_cache/
 *.pyo
 *.pyd
 .Python
@@ -20,3 +21,5 @@ var/
 *.egg
 *.log
 .env
+service_account.json
+local/
