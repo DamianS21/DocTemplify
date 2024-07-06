@@ -230,8 +230,6 @@ class GoogleDocsConnector:
         elif color.startswith('rgb'):
             r, g, b = map(lambda x: int(x.strip()) / 255, color[4:-1].split(','))
         else:
-            # For named colors, you might want to add a mapping or use a library like webcolors
-            # For simplicity, we'll just use black for unknown colors
             r, g, b = 0, 0, 0
 
         return {
