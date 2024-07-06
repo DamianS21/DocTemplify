@@ -5,6 +5,8 @@ from .google_fonts import GOOGLE_DOCS_FONTS
 from .exceptions import GoogleAPIError
 from .template_parser import TemplateParser, InvalidTemplateException
 
+GDOCS_DEFAULT_URL = "https://docs.google.com/document/d/{}/edit"
+
 class GoogleDocsConnector:
     def __init__(self, service_account_file: str):
         self.SCOPES = ['https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/documents']
@@ -16,6 +18,18 @@ class GoogleDocsConnector:
             self.template_parser = TemplateParser(self)
         except Exception as e:
             raise GoogleAPIError(f"Failed to initialize Google API services: {str(e)}")
+
+    def get_document_url(self, document_id: str) -> str:
+        """
+        Get the URL for a Google Docs document.
+
+        Args:
+            document_id (str): The ID of the document.
+
+        Returns:
+            str: The URL of the document.
+        """
+        return GDOCS_DEFAULT_URL.format(document_id)
 
     def get_document_text(self, document_id: str) -> str:
         try:
