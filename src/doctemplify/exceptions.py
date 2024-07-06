@@ -5,3 +5,7 @@ class GoogleAPIError(Exception):
 class DocumentGenerationError(Exception):
     """Exception raised for errors in document generation process."""
     pass
+
+class TemplateParsingError(Exception):
+    """Exception raised for errors in parsing the template document."""
+    pass
