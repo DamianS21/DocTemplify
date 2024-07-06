@@ -31,9 +31,18 @@ Key features:
 5. Click "Send" to share the document with the service account.
 
 ### 4. Install DocTemplify
-```
-pip install doctemplify
-```
+1. Clone the repository:
+   ```
+   git clone https://github.com/DamianS21/DocTemplify.git
+   ```
+2. Navigate to the DocTemplify directory:
+   ```
+   cd DocTemplify
+   ```
+3. Install the package in editable mode:
+   ```
+   pip install -e .
+   ```
 
 ## Usage
 
