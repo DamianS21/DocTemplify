@@ -36,7 +36,7 @@ DocTemplify is a Python library that streamlines document generation using Googl
 ### 4. Install DocTemplify
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/DocTemplify.git
+   git clone https://github.com/DamianS21/DocTemplify.git
    ```
 2. Navigate to the DocTemplify directory:
    ```
