@@ -9,3 +9,7 @@ class DocumentGenerationError(Exception):
 class TemplateParsingError(Exception):
     """Exception raised for errors in parsing the template document."""
     pass
+
+class TemplateCreationError(Exception):
+    """Exception raised for errors in template creation process."""
+    pass

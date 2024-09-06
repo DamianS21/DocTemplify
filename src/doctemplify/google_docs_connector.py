@@ -12,12 +12,123 @@ class GoogleDocsConnector:
         self.SCOPES = ['https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/documents']
         self.GOOGLE_DOCS_FONTS = GOOGLE_DOCS_FONTS
         try:
+            
             self.creds = Credentials.from_service_account_file(service_account_file, scopes=self.SCOPES)
             self.drive_service = build('drive', 'v3', credentials=self.creds)
             self.docs_service = build('docs', 'v1', credentials=self.creds)
             self.template_parser = TemplateParser(self)
         except Exception as e:
             raise GoogleAPIError(f"Failed to initialize Google API services: {str(e)}")
+
+    def create_document(self, title: str, public: bool = False) -> Tuple[str, str]:
+        """
+        Create a new Google Docs document.
+
+        Args:
+            title (str): The title of the new document.
+            public (bool): Whether to make the document public.
+
+        Returns:
+            Tuple[str, str]: The document ID and URL.
+        """
+        try:
+            body = {
+                'title': title
+            }
+            doc = self.docs_service.documents().create(body=body).execute()
+            doc_id = doc['documentId']
+            doc_url = GDOCS_DEFAULT_URL.format(doc_id)
+
+            if public:
+                self.set_public_permissions(doc_id)
+
+            return doc_id, doc_url
+        except Exception as e:
+            raise GoogleAPIError(f"Failed to create document: {str(e)}")
+
+    def add_text(self, doc_id: str, text: str, style: Dict[str, Any] = None) -> None:
+        requests = [
+            {
+                'insertText': {
+                    'location': {'index': 1},
+                    'text': text + '\n'
+                }
+            }
+        ]
+        if style:
+            requests.append(self._create_style_request(style, 1, len(text) + 1))
+        self._batch_update(doc_id, requests)
+
+    def add_heading(self, doc_id: str, text: str, level: int, style: Dict[str, Any] = None) -> None:
+        requests = [
+            {
+                'insertText': {
+                    'location': {'index': 1},
+                    'text': text + '\n'
+                }
+            },
+            {
+                'updateParagraphStyle': {
+                    'range': {'startIndex': 1, 'endIndex': len(text) + 2},
+                    'paragraphStyle': {'namedStyleType': f'HEADING_{level}'},
+                    'fields': 'namedStyleType'
+                }
+            }
+        ]
+        if style:
+            requests.append(self._create_style_request(style, 1, len(text) + 1))
+        self._batch_update(doc_id, requests)
+
+
+    def add_list(self, doc_id: str, items: List[str], style: Dict[str, Any] = None) -> None:
+        requests = []
+        start_index = 1
+        for item in items:
+            requests.extend([
+                {
+                    'insertText': {
+                        'location': {'index': start_index},
+                        'text': item + '\n'
+                    }
+                },
+                {
+                    'createParagraphBullets': {
+                        'range': {'startIndex': start_index, 'endIndex': start_index + len(item) + 1},
+                        'bulletPreset': 'BULLET_DISC_CIRCLE_SQUARE'
+                    }
+                }
+            ])
+            if style:
+                requests.append(self._create_style_request(style, start_index, start_index + len(item)))
+            start_index += len(item) + 1
+        self._batch_update(doc_id, requests)
+
+    def add_table(self, doc_id: str, rows: int, cols: int, content: List[List[str]], style: Dict[str, Any] = None) -> None:
+        requests = [
+            {
+                'insertTable': {
+                    'rows': rows,
+                    'columns': cols,
+                    'location': {'index': 1}
+                }
+            }
+        ]
+        self._batch_update(doc_id, requests)
+
+        for i, row in enumerate(content):
+            for j, cell in enumerate(row):
+                self.add_text(doc_id, cell, style)
+
+
+    def add_image_placeholder(self, doc_id: str, placeholder: str, style: Dict[str, Any] = None) -> None:
+        self.add_text(doc_id, placeholder, style)
+
+    def _batch_update(self, doc_id: str, requests: List[Dict[str, Any]]) -> None:
+        try:
+            self.docs_service.documents().batchUpdate(documentId=doc_id, body={'requests': requests}).execute()
+        except Exception as e:
+            raise GoogleAPIError(f"Failed to update document: {str(e)}")
+
 
     def get_document_url(self, document_id: str) -> str:
         """
@@ -68,12 +179,14 @@ class GoogleDocsConnector:
         try:
             document_text = self.get_document_text(document_id)
             parameters = self.template_parser.find_parameters(document_text)
-            missing_params = self.template_parser.validate_data(parameters, data)
+            missing_params = []
+
+            for param in parameters:
+                if param not in data:
+                    missing_params.append(param)
             
             if missing_params:
                 raise InvalidTemplateException(f"The following parameters are missing from the data: {', '.join(missing_params)}")
-        except InvalidTemplateException as e:
-            raise e
         except Exception as e:
             raise GoogleAPIError(f"Failed to validate template: {str(e)}")
 
@@ -265,6 +378,12 @@ class GoogleDocsConnector:
             raise GoogleAPIError(f"Failed to copy template: {str(e)}")
 
     def set_public_permissions(self, document_id: str) -> None:
+        """
+        Set public permissions for the document.
+
+        Args:
+            document_id (str): The ID of the document to make public.
+        """
         try:
             self.drive_service.permissions().create(
                 fileId=document_id,
