@@ -8,7 +8,7 @@ DocTemplify is a Python library that streamlines document generation using Googl
 - Google Docs integration
 - Placeholder replacement with custom data
 - Optional styling for placeholders
-- Easy-to-use API for document creation and management
+- Easy-to-use API for document creation and management (soon)
 - Automatic generation of document URLs
 
 ## Setup
@@ -49,41 +49,136 @@ DocTemplify is a Python library that streamlines document generation using Googl
 
 ## Usage
 
-### Creating Template Variables
+### Creating Document Templates and Populating with Data
 
-DocTemplify supports two types of variables in your Google Docs templates:
+DocTemplify makes it easy to create a document template and then generate documents using dynamic data. You can define the structure of the document in JSON, which includes placeholders for text, lists, tables, and images.
 
-1. **Simple Variables**: These are replaced with plain text.
-2. **Styled Variables**: These are replaced with text that has specific styling applied.
-
-#### Simple Variables
-
-To create a simple variable, use double curly braces:
+### Step 1: Define the Template Structure
+The document template is defined in a JSON format, specifying different elements such as headings, paragraphs, lists, tables, and image placeholders.
 
 ```
-{{variable_name}}
+template_structure = {
+    "header": {
+        "type": "heading",
+        "content": "{{header}}",
+        "level": 1,
+        "style": {"color": "#000080"}
+    },
+    "introduction": {
+        "type": "text",
+        "content": "{{introduction}}",
+        "style": {"font-style": "italic"}
+    },
+    "financial_summary": {
+        "type": "heading",
+        "content": "{{financial_summary}}",
+        "level": 2
+    },
+    "key_metrics": {
+        "type": "list",
+        "items": [
+            "{{key_metrics[0]}}",
+            "{{key_metrics[1]}}",
+            "{{key_metrics[2]}}"
+        ]
+    },
+    "data_table": {
+        "type": "table",
+        "rows": 4,
+        "cols": 2,
+        "content": [
+            ["{{data_table[0][0]}}", "{{data_table[0][1]}}"],
+            ["{{data_table[1][0]}}", "{{data_table[1][1]}}"],
+            ["{{data_table[2][0]}}", "{{data_table[2][1]}}"],
+            ["{{data_table[3][0]}}", "{{data_table[3][1]}}"]
+        ]
+    },
+    "company_logo": {
+        "type": "image",
+        "content": "{{IMAGE_PLACEHOLDER:company_logo}}",
+        "style": {"width": "200px", "height": "100px"}
+    },
+    "conclusion": {
+        "type": "text",
+        "content": "{{conclusion}}"
+    }
+}
 ```
 
-Example:
-```
-Dear {{client_name}},
-
-Thank you for your interest in our {{product_name}}.
-```
-
-#### Styled Variables
-
-To create a styled variable, use double curly braces with a colon followed by CSS-like styling:
+### Step 2: Create a Document Template
+Once the template structure is defined, you can create the template document in Google Docs using the `TemplateCreator`.
 
 ```
-{{variable_name : style1: value1; style2: value2;}}
+from doctemplify import GoogleDocsConnector, TemplateCreator
+
+# Initialize the Google Docs connector
+connector = GoogleDocsConnector('path/to/your/service_account.json')
+
+# Create the template creator
+template_creator = TemplateCreator(connector)
+
+# Create the document template
+template_id, template_url = template_creator.create_template_from_json(
+    template_structure,
+    "Company Report Template",
+    public=True
+)
+
+print(f"Template created with ID: {template_id}")
+print(f"Template URL: {template_url}")
+
 ```
 
-Example:
+### Step 3: Define the Data for the Template
+To generate a document based on the template, you need to provide a data dictionary. The keys should match the placeholders in your template.
 ```
-{{company_name.main : color: #333333; font-weight: bold; font-size: 18pt; font-family: "Arial"}}
-{{company_name.accent : color: #0066cc; font-style: italic; font-size: 16px; font-family: "Georgia"}}
+document_data = {
+    "header": "Company Report",
+    "introduction": "This report provides an overview of our company's performance for Q3 2023.",
+    "financial_summary": "Financial Summary",
+    "key_metrics[0]": "Revenue: $500,000",
+    "key_metrics[1]": "Expenses: $300,000",
+    "key_metrics[2]": "Profit: $200,000",
+    "data_table[0][0]": "Quarter",
+    "data_table[0][1]": "Revenue",
+    "data_table[1][0]": "Q1",
+    "data_table[1][1]": "$400,000",
+    "data_table[2][0]": "Q2",
+    "data_table[2][1]": "$450,000",
+    "data_table[3][0]": "Q3",
+    "data_table[3][1]": "$500,000",
+    "IMAGE_PLACEHOLDER:company_logo": {
+        "url": "https://bioraslub.pl/wp-content/uploads/2022/10/biora-slub.png",
+        "width": 200,
+        "height": 100
+    },
+    "conclusion": "In conclusion, our company has shown strong growth this quarter, with revenue increasing by 11% compared to the previous quarter."
+}
 ```
+
+### Step 4: Generate a Document
+Use the `DocumentGenerator` to populate the template with your data and create a new document.
+```
+from doctemplify import DocumentGenerator
+
+# Create a document generator
+document_generator = DocumentGenerator(connector)
+
+# Generate the document
+new_doc_id, new_doc_url = document_generator.generate_document(
+    template_id,
+    document_data,
+    new_name='Q3 2023 Company Report',
+    return_url=True
+)
+
+print(f"New document created with ID: {new_doc_id}")
+print(f"New document URL: {new_doc_url}")
+```
+
+### Handling Image Placeholders
+If your template contains image placeholders, such as `{{IMAGE_PLACEHOLDER:company_logo}}`, you can specify the image URL, width, and height in the data dictionary. The library will replace the placeholder with the image during document generation.
+
 
 ### Styling in DocTemplify
 
