@@ -56,7 +56,7 @@ DocTemplify makes it easy to create a document template and then generate docume
 ### Step 1: Define the Template Structure
 The document template is defined in a JSON format, specifying different elements such as headings, paragraphs, lists, tables, and image placeholders.
 
-```
+```python
 template_structure = {
     "header": {
         "type": "heading",
@@ -108,7 +108,7 @@ template_structure = {
 ### Step 2: Create a Document Template
 Once the template structure is defined, you can create the template document in Google Docs using the `TemplateCreator`.
 
-```
+```python
 from doctemplify import GoogleDocsConnector, TemplateCreator
 
 # Initialize the Google Docs connector
@@ -131,7 +131,8 @@ print(f"Template URL: {template_url}")
 
 ### Step 3: Define the Data for the Template
 To generate a document based on the template, you need to provide a data dictionary. The keys should match the placeholders in your template.
-```
+
+```python
 document_data = {
     "header": "Company Report",
     "introduction": "This report provides an overview of our company's performance for Q3 2023.",
@@ -158,7 +159,8 @@ document_data = {
 
 ### Step 4: Generate a Document
 Use the `DocumentGenerator` to populate the template with your data and create a new document.
-```
+
+```python
 from doctemplify import DocumentGenerator
 
 # Create a document generator
