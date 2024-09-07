@@ -175,6 +175,7 @@ new_doc_id, new_doc_url = document_generator.generate_document(
 print(f"New document created with ID: {new_doc_id}")
 print(f"New document URL: {new_doc_url}")
 ```
+## Methods
 
 ### Handling Image Placeholders
 If your template contains image placeholders, such as `{{IMAGE_PLACEHOLDER:company_logo}}`, you can specify the image URL, width, and height in the data dictionary. The library will replace the placeholder with the image during document generation.
