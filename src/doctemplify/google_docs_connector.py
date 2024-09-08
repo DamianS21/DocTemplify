@@ -1,24 +1,41 @@
-from google.oauth2.service_account import Credentials
+from google.oauth2.service_account import Credentials as ServiceAccountCredentials
 from googleapiclient.discovery import build
 from typing import Dict, Any, List, Tuple, Optional
 from .google_fonts import GOOGLE_DOCS_FONTS
 from .exceptions import GoogleAPIError
 from .template_parser import TemplateParser, InvalidTemplateException
+from .oauth_handler import OAuthHandler
 
 GDOCS_DEFAULT_URL = "https://docs.google.com/document/d/{}/edit"
 
 class GoogleDocsConnector:
-    def __init__(self, service_account_file: str):
+    def __init__(self, auth_file: str, auth_type: str = 'service_account'):
         self.SCOPES = ['https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/documents']
         self.GOOGLE_DOCS_FONTS = GOOGLE_DOCS_FONTS
+        self.auth_type = auth_type
+        self.auth_file = auth_file
+        self.drive_service = None
+        self.docs_service = None
+        self.template_parser = None
+        self.current_index = 1
+        self._initialize_services()
+
+    def _initialize_services(self):
         try:
-            self.creds = Credentials.from_service_account_file(service_account_file, scopes=self.SCOPES)
-            self.drive_service = build('drive', 'v3', credentials=self.creds)
-            self.docs_service = build('docs', 'v1', credentials=self.creds)
+            if self.auth_type == 'service_account':
+                creds = ServiceAccountCredentials.from_service_account_file(self.auth_file, scopes=self.SCOPES)
+            elif self.auth_type == 'oauth':
+                oauth_handler = OAuthHandler(self.auth_file, self.SCOPES)
+                creds = oauth_handler.get_credentials()
+            else:
+                raise ValueError(f"Invalid auth_type: {self.auth_type}. Must be 'service_account' or 'oauth'.")
+
+            self.drive_service = build('drive', 'v3', credentials=creds)
+            self.docs_service = build('docs', 'v1', credentials=creds)
             self.template_parser = TemplateParser(self)
-            self.current_index = 1
         except Exception as e:
             raise GoogleAPIError(f"Failed to initialize Google API services: {str(e)}")
+
 
     def create_document(self, title: str, public: bool = False) -> Tuple[str, str]:
         """
